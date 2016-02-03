@@ -18,11 +18,11 @@ float Edge_HW_x = -90.0f;
 float Edge_HW_y = 81.0f;
 float Edge_HW_z = 0.0f;
 //Motor ×ÝÏò ÔË¶¯
-float Edge_ZW_x =-88.0f;
+float Edge_ZW_x = -88.0f;
 float Edge_ZW_y = 83.0f;
 float Edge_ZW_z = -0.0f;
 
-//float Edge_ZW_x =-90.0f;
+//float Edge_ZW_x = -90.0f;
 //float Edge_ZW_y = 81.0f;
 //float Edge_ZW_z = -0.0f;
 

@@ -359,4 +359,35 @@ float GL_COS_Angle(GL_Vector A,GL_Vector B)
 	}
 	return angle_f;
 }
+
+
+/*************************************************************************/
+float determinant(float data[][3])
+{
+	float A=data[0][0] * (data[1][1] * data[2][2] - data[2][1] * data[1][2])
+		 -  data[0][1] * (data[1][0] * data[2][2] - data[1][2] * data[2][0])
+		 +  data[0][2] * (data[1][0] * data[2][1] - data[1][1] * data[2][0]);
+
+	return A;
+}
+
+bool invert(float m[][3],float result[][3])
+{
+	float d = determinant(m);
+	if (d == 0.0f)
+	{
+		return false;
+	}
+	double invdet = 1.0 / d;
+	result[0][0] = (m[1][1] * m[2][2] - m[2][1] * m[1][2]) * invdet;
+	result[0][1] = -(m[0][1] * m[2][2] - m[0][2] * m[2][1]) * invdet;
+	result[0][2] = (m[0][1] * m[1][2] - m[0][2] * m[1][1]) * invdet;
+	result[1][0] = -(m[1][0] * m[2][2] - m[1][2] * m[2][0]) * invdet;
+	result[1][1] = (m[0][0] * m[2][2] - m[0][2] * m[2][0]) * invdet;
+	result[1][2] = -(m[0][0] * m[1][2] - m[1][0] * m[0][2]) * invdet;
+	result[2][0] = (m[1][0] * m[2][1] - m[2][0] * m[1][1]) * invdet;
+	result[2][1] = -(m[0][0] * m[2][1] - m[2][0] * m[0][1]) * invdet;
+	result[2][2] = (m[0][0] * m[1][1] - m[1][0] * m[0][1]) * invdet;
+	return true;
+}
 #endif
