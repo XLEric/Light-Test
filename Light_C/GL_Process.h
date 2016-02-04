@@ -41,7 +41,7 @@ float Angle_Y=0,Angle_X=0;
 
 bool Flag_X=0,Flag_Y=1;
 
-float pos_x=-7,pos_y=51,pos_z=122;
+float pos_x=37,pos_y=55,pos_z=158;
 
 int gxr_Global=0;
 int gyr_Global=0;
@@ -1121,22 +1121,19 @@ void GL_Build_Steepest_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[
 	float t1 = tN_GlobalS_3N[numc][0];
 	float t2 = tN_GlobalS_3N[numc][1];
 	float t3 = tN_GlobalS_3N[numc][2];
-	
+	float t1b = 170, t2b = 170, t3b = 170;
 	//-------------------
 	float Ft1, Ft2, Ft3;
-	float t1b = 170, t2b = 170, t3b = 170;
-
+	
 	//射线向量
 	float a1 = LineRays[ID_Pt[0]].x; float b1 = LineRays[ID_Pt[0]].y; float c1 = LineRays[ID_Pt[0]].z;
 	float a2 = LineRays[ID_Pt[1]].x; float b2 = LineRays[ID_Pt[1]].y; float c2 = LineRays[ID_Pt[1]].z;
 	float a3 = LineRays[ID_Pt[2]].x; float b3 = LineRays[ID_Pt[2]].y; float c3 = LineRays[ID_Pt[2]].z;
-	
 	// 
 	GL_Vector pt0[3];
 	pt0[0] = LineRays[ID_Pt[0]].pt0;
 	pt0[1] = LineRays[ID_Pt[1]].pt0;
 	pt0[2] = LineRays[ID_Pt[2]].pt0;
-	
 	//
 	float x = a1*t1;
 	float y = b1*t1;
@@ -1144,8 +1141,6 @@ void GL_Build_Steepest_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[
 	float track_dst = GL_Distance(0, 0, 0, x, y, z);
 
 	/**********************************************************/
-	float nn = 0.002f;// 递归步长 适中（不能太大也不能太小）。
-
 	Fps_Track_Start = 1;
 	//边长平方
 	float E12 = ID_Length[0];// 1->2
@@ -1153,7 +1148,7 @@ void GL_Build_Steepest_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[
 	float E32 = ID_Length[2];// 1->3
 	
 	//------构建模型系数
-	float knn[10][6];
+	float(*knn)[6] = new float[3][6];
 	GLB_Knn2(knn, a1, b1, c1, pt0[0], a2, b2, c2, pt0[1], 0);
 	GLB_Knn2(knn, a2, b2, c2, pt0[1], a3, b3, c3, pt0[2], 1);
 	GLB_Knn2(knn, a1, b1, c1, pt0[0], a3, b3, c3, pt0[2], 2);
@@ -1189,7 +1184,6 @@ void GL_Build_Steepest_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[
 	//                   =( (a1*t1-a2*t2+pt0[0].x-pt0[1].x)*(a3*t3-a2*t2+pt0[2].x-pt0[1].x) + (b1*t1-b2*t2+pt0[0].y-pt0[1].y)*(b3*t3-b2*t2+pt0[2].y-pt0[1].y) + (c1*t1-c2*t2+pt0[0].z-pt0[1].z)*(c3*t3-c2*t2+pt0[2].z-pt0[1].z) )
 	//                   *( (a1*t1-a2*t2+pt0[0].x-pt0[1].x)*(a3*t3-a2*t2+pt0[2].x-pt0[1].x) + (b1*t1-b2*t2+pt0[0].y-pt0[1].y)*(b3*t3-b2*t2+pt0[2].y-pt0[1].y) + (c1*t1-c2*t2+pt0[0].z-pt0[1].z)*(c3*t3-c2*t2+pt0[2].z-pt0[1].z) );
 
-
 	// F_Angle/t1偏导数=2*( (a1*t1-a2*t2+pt0[0].x-pt0[1].x)*(a3*t3-a2*t2+pt0[2].x-pt0[1].x) + (b1*t1-b2*t2+pt0[0].y-pt0[1].y)*(b3*t3-b2*t2+pt0[2].y-pt0[1].y) + (c1*t1-c2*t2+pt0[0].z-pt0[1].z)*(c3*t3-c2*t2+pt0[2].z-pt0[1].z) )
 	//                 *( (a1)*(a3*t3-a2*t2+pt0[2].x-pt0[1].x) + (b1)*(b3*t3-b2*t2+pt0[2].y-pt0[1].y) + (c1)*(c3*t3-c2*t2+pt0[2].z-pt0[1].z) )
 
@@ -1209,25 +1203,22 @@ void GL_Build_Steepest_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[
 	t_min[2] = t3;*/
 	
 	//-------------------------------------------------------------
-	while (DiguCnt == 0 || (DiguCnt != 0 && DiguNum == 65535))
+	bool Flag_DiGu = 0;//递归运算运行标识符
+	float nn = 0.002f;// 递归步长 适中（不能太大也不能太小）。
+	//float (*m)[3] = new float[3][3];
+	while (!Flag_DiGu)
 	{
-		/*if(DiguCnt>15)nn=0.000023;*/
-		if (DiguCnt>=4)break;
+		if (DiguCnt>=4)break;//递归次数大循环 限制
 		DiguNum = 0;
 		DiguCnt++;
 		int i = 0;
-		bool flag = 0;
+		
 		for (i = 0; i<65535; i++)
 		{
-			if (Point_Check == 3)//四点递归
-			{
-				float t1F = t1*t1;
-				float t2F = t2*t2;
-				float t3F = t3*t3;
-
-				float D1 = (knn[0][0] * t1F + knn[0][1] * t2F + knn[0][2] * t1*t2 + knn[0][3] * t1 + knn[0][4] * t2 + knn[0][5] - E12);
-				float D2 = (knn[1][0] * t2F + knn[1][1] * t3F + knn[1][2] * t2*t3 + knn[1][3] * t2 + knn[1][4] * t3 + knn[1][5] - E22);
-				float D3 = (knn[2][0] * t1F + knn[2][1] * t3F + knn[2][2] * t1*t3 + knn[2][3] * t1 + knn[2][4] * t3 + knn[2][5] - E32);
+			// 3点递归
+				float D1 = (knn[0][0] * t1*t1 + knn[0][1] * t2*t2 + knn[0][2] * t1*t2 + knn[0][3] * t1 + knn[0][4] * t2 + knn[0][5] - E12);
+				float D2 = (knn[1][0] * t2*t2 + knn[1][1] * t3*t3 + knn[1][2] * t2*t3 + knn[1][3] * t2 + knn[1][4] * t3 + knn[1][5] - E22);
+				float D3 = (knn[2][0] * t1*t1 + knn[2][1] * t3*t3 + knn[2][2] * t1*t3 + knn[2][3] * t1 + knn[2][4] * t3 + knn[2][5] - E32);
 
 				Ft1 = D1* (2.0f * knn[0][0] * t1 + knn[0][2] * t2 + knn[0][3])
 					+ D3* (2.0f * knn[2][0] * t1 + knn[2][2] * t3 + knn[2][3])
@@ -1240,13 +1231,39 @@ void GL_Build_Steepest_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[
 				Ft3 = D2* (2.0f * knn[1][1] * t3 + knn[1][2] * t2 + knn[1][4])
 					+ D3* (2.0f * knn[2][1] * t3 + knn[2][2] * t1 + knn[2][4])
 					;
-			}
+				//------ 雅克比矩阵 最速下降法算法步长必须 雅克比矩阵为正定矩阵
+	/*			m[0][0] = D1* (2 * knn[0][0] * t1 + knn[0][2] * t2 + knn[0][3]);
+				m[0][1] = D1* (2 * knn[0][1] * t2 + knn[0][2] * t1 + knn[0][4]);
+				m[0][2] = 0;
 
+				m[1][0] = 0;
+				m[1][1] = D2* (2 * knn[1][0] * t2 + knn[1][2] * t3 + knn[1][3]);
+				m[1][2] = D2* (2 * knn[1][1] * t3 + knn[1][2] * t2 + knn[1][4]);
+
+				m[2][0] = D3* (2 * knn[2][0] * t1 + knn[2][2] * t3 + knn[2][3]);
+				m[2][1] = 0;
+				m[2][2] = D3* (2 * knn[2][1] * t3 + knn[2][2] * t1 + knn[2][4]);
+
+				float Fz = Ft1*Ft1 + Ft2*Ft2 + Ft3*Ft3;//步长分子
+				//步长分母
+				float Fm1 = Ft1*m[0][0] + Ft2*m[1][0] + Ft3*m[2][0];
+				float Fm2 = Ft1*m[0][1] + Ft2*m[1][1] + Ft3*m[2][1];
+				float Fm3 = Ft1*m[0][2] + Ft2*m[1][2] + Ft3*m[2][2];
+				//
+				nn = 0.002f;
+				float Fm = Ft1*Fm1 + Ft2*Fm2 + Ft3*Fm3;
+				
+				if (Fm != 0)
+				{
+					nn = Fz / Fm;
+				}
+*/
 			float t1br = t1 - nn*Ft1;
 			float t2br = t2 - nn*Ft2;
 			float t3br = t3 - nn*Ft3;
 
-			if (t1br*c1 > 0 && t1br*c1 < 350 && t2br*c2 > 0 && t2br*c2 < 350 && t3br*c3 > 0 && t3br*c3 < 350)
+			//----------------------------
+			if ((t1br*c1) > 0 && (t1br*c1) < 350 && (t2br*c2) > 0 && (t2br*c2) < 350 && (t3br*c3) > 0 && (t3br*c3) < 350)
 			{
 				t1b = t1br;
 				t2b = t2br;
@@ -1254,28 +1271,29 @@ void GL_Build_Steepest_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[
 			}
 			else
 			{
-				flag = 1;
+				//printf("----------------------------------------------- >>>> 计算最优峰值 溢出报错！！！\n");
+				//printf("tnbr:(%f,%f,%f)\n", t1br, t2br, t3br);
+				Flag_DiGu = 1;
+				break;
 			}
 			
-			if (Point_Check == 3)
+			//------ 当梯度变化趋势很小时，认为找到极值点，跳出循环。
+			if (ABS(Ft1)<0.003 && ABS(Ft2)<0.003 && ABS(Ft3)<0.003)//if (t1 == t1b && t2 == t2b && t3 == t3b )
 			{
-				if (t1 == t1b && t2 == t2b && t3 == t3b )// && (ABS(t1-t1b)<0.005 && ABS(t2-t2b)<0.005 && ABS(t3-t3b)<0.005 && ABS(t4-t4b)<0.005)) 
-				{
-					flag = 1;
-					break;
-				}
+				t1 = t1b;
+				t2 = t2b;
+				t3 = t3b;
+				Flag_DiGu = 1;
+				break;
 			}
-
+			
 			t1 = t1b;
 			t2 = t2b;
 			t3 = t3b;
 		}
 
 		DiguNum = i;
-		if (flag == 1)
-			break;
 	}
-	
 	
 	//---------------------------------------------------------------------------------------------------------------------------------------------------
 	//在小区域内扰动
@@ -1387,6 +1405,9 @@ void GL_Build_Steepest_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[
 		+ (knn[1][0] * t2*t2 + knn[1][1] * t3*t3 + knn[1][2] * t2*t3 + knn[1][3] * t2 + knn[1][4] * t3 + knn[1][5] - E22)*(knn[1][0] * t2*t2 + knn[1][1] * t3*t3 + knn[1][2] * t2*t3 + knn[1][3] * t2 + knn[1][4] * t3 + knn[1][5] - E22)
 		+ (knn[2][0] * t1*t1 + knn[2][1] * t3*t3 + knn[2][2] * t1*t3 + knn[2][3] * t1 + knn[2][4] * t3 + knn[2][5] - E32)*(knn[2][0] * t1*t1 + knn[2][1] * t3*t3 + knn[2][2] * t1*t3 + knn[2][3] * t1 + knn[2][4] * t3 + knn[2][5] - E32)
 		;
+
+	delete[]knn;
+	//delete[]m;
 	//---------------------------------------------------
 }
 
@@ -1587,14 +1608,15 @@ void GL_Build_Steepest_M4Point(int *ID_Pt,float*ID_Length,float tN_GlobalS_4N[][
 		t_min[2] = t3;
 		t_min[3] = t4;
 	//-------------------------------------------------------------
-	 while(DiguCnt==0 ||(DiguCnt!=0 && DiguNum==65535))
+		bool Flag_DiGu = 0;
+		while (!Flag_DiGu)
 		 {
 			 /*if(DiguCnt>15)nn=0.000023;*/
 			 if(DiguCnt>1)break;
 			 DiguNum=0;
 			 
 			 int i=0;
-			 bool flag = 0;
+			 
 		 for( i=0;i<65535;i++)
 		 {
 
@@ -1709,18 +1731,21 @@ void GL_Build_Steepest_M4Point(int *ID_Pt,float*ID_Length,float tN_GlobalS_4N[][
 				 t_min[3] = t4;
 			 }*/
 
-			 if (Point_Check == 4)
-			 {
-				 if (t1 == t1b && t2 == t2b && t3 == t3b &&t4 == t4b)// && (ABS(t1-t1b)<0.005 && ABS(t2-t2b)<0.005 && ABS(t3-t3b)<0.005 && ABS(t4-t4b)<0.005)) 
-				 {
-					 flag = 1;
-					 break;
-				 }
-			 }
+			
+			if (t1 == t1b && t2 == t2b && t3 == t3b &&t4 == t4b)// && (ABS(t1-t1b)<0.005 && ABS(t2-t2b)<0.005 && ABS(t3-t3b)<0.005 && ABS(t4-t4b)<0.005)) 
+			{
+				Flag_DiGu = 1;
+				break;
+			}
+			 
 
 			 if (DiguCnt >= 1)
 			 {
-				 if (i > 20000)break;
+				 if (i > 20000)
+				 {
+					 Flag_DiGu = 1;
+					 break;
+				 }
 			 }
 #endif
 
@@ -1730,13 +1755,7 @@ void GL_Build_Steepest_M4Point(int *ID_Pt,float*ID_Length,float tN_GlobalS_4N[][
 			 t4=t4b;
 		 }
 		 DiguCnt++;
-		    if(flag == 1)
-			DiguNum = 1;
-			else
-			DiguNum = i;
-
-			
-
+		  
 		 }
 
 		 //---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1891,7 +1910,7 @@ void GL_Got_Length(int *ID_PtN,float *ID_LengthN)
 
 }
 /***************************** 牛顿迭代函数 *****************************/
-void GL_Build_NiuTun_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][4], float* Energy_GlobalN, int numc,
+void GL_Build_NewTon_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][4], float* Energy_GlobalN, int numc,
 	int &Point_Check, int &DiguCnt, int &DiguNum, bool Flag_Step, int Rude_Step_Control)
 {
 	//当多组合时，DiguNum 与 DiguCnt必须清零。
@@ -1995,14 +2014,15 @@ void GL_Build_NiuTun_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][
 
 	//-------------------------------------------------------------
 	//printf("------------------------------->>>     使用牛顿迭代法\n");
-	while (DiguCnt == 0 || (DiguCnt != 0 && DiguNum == 65535))
+	bool Flag_DiGu = 0;
+	while (!Flag_DiGu)
 	{
 		/*if(DiguCnt>15)nn=0.000023;*/
 		if (DiguCnt >= 1)break;
 		DiguNum = 0;
 		DiguCnt++;
 		int i = 0;
-		bool flag = 0;
+		
 		for (i = 0; i<65535; i++)
 		{
 			float D1 = (knn[0][0] * t1*t1 + knn[0][1] * t2*t2 + knn[0][2] * t1*t2 + knn[0][3] * t1 + knn[0][4] * t2 + knn[0][5] - E12);
@@ -2044,7 +2064,7 @@ void GL_Build_NiuTun_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][
 			{
 				printf("-------------------------------------------------- >>> 雅克比矩阵求逆失败 ！！！\n");
 				printf("雅克比运行次数 ：%d*65535 + %d \n", DiguCnt - 1, i);
-				flag = 1;
+				Flag_DiGu = 1;
 				//雅克比矩阵为0，扰动
 				//扰动
 				/*t1 += float(rand() % 101 - 50) / 50.0f *3.3f;
@@ -2068,19 +2088,17 @@ void GL_Build_NiuTun_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][
 			flag = 1;
 			}*/
 
-			if (Point_Check == 3)
-			{
+			
 				if (E1==0 && E2==0 && E3==0)// && (ABS(t1-t1b)<0.005 && ABS(t2-t2b)<0.005 && ABS(t3-t3b)<0.005 && ABS(t4-t4b)<0.005)) 
 				{
-					flag = 1;
+					Flag_DiGu = 1;
 					break;
 				}
-			}
+			
 			
 		}
 		DiguNum = i;
-		if (flag == 1)
-			break;
+		
 	}
 
 
@@ -2097,14 +2115,14 @@ void GL_Build_NiuTun_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][
 
 	int DiguCnt_R = 0;
 	int DiguNum_R = 0;
-	while (DiguCnt_R == 0 || (DiguCnt_R != 0 && DiguNum_R == 65535))
+	Flag_DiGu=0;
+	while (!Flag_DiGu)
 	{
 		/*if(DiguCnt>15)nn=0.000023;*/
 		if (DiguCnt_R>1)break;
 		DiguNum_R = 0;
 		DiguCnt_R++;
 		int i = 0;
-		bool flag = 0;
 		
 		for (i = 0; i<65535; i++)
 		{
@@ -2140,26 +2158,21 @@ void GL_Build_NiuTun_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][
 			}
 			else
 			{
-				flag = 1;
+				Flag_DiGu = 1;
 			}
 
-
-			if (Point_Check == 3)
+			if (t1 == t1b && t2 == t2b && t3 == t3b )// && (ABS(t1-t1b)<0.005 && ABS(t2-t2b)<0.005 && ABS(t3-t3b)<0.005 && ABS(t4-t4b)<0.005)) 
 			{
-				if (t1 == t1b && t2 == t2b && t3 == t3b )// && (ABS(t1-t1b)<0.005 && ABS(t2-t2b)<0.005 && ABS(t3-t3b)<0.005 && ABS(t4-t4b)<0.005)) 
-				{
-					flag = 1;
-					break;
-				}
+				Flag_DiGu = 1;
+				break;
 			}
+			
 
 			t1 = t1b;
 			t2 = t2b;
 			t3 = t3b;
 		}
-		if (flag == 1)
-			DiguNum_R = 1;
-		else
+		
 			DiguNum_R = i;
 	}
 
@@ -2213,8 +2226,8 @@ void GL_Build_NiuTun_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][
 void GL_Build_MPoint_Process(int *ID_Pt,float*ID_Length,int numc,int &Point_Check,int &DiguCnt,int &DiguNum,int Rude_Step_Control)
 {
 	//GL_Build_Steepest_M4Point(ID_Pt,ID_Length, tN_GlobalS_4A,Energy_GlobalA,tStep_nn_G,numc,Point_Check,DiguCnt,DiguNum,1,Rude_Step_Control);
-	//GL_Build_Steepest_M3Point(ID_Pt, ID_Length, tN_GlobalS_4A, Energy_GlobalA, numc, Point_Check, DiguCnt, DiguNum, 1, Rude_Step_Control);
-	GL_Build_NiuTun_M3Point(ID_Pt, ID_Length, tN_GlobalS_4A, Energy_GlobalA, numc, Point_Check, DiguCnt, DiguNum, 1, Rude_Step_Control);
+	GL_Build_Steepest_M3Point(ID_Pt, ID_Length, tN_GlobalS_4A, Energy_GlobalA, numc, Point_Check, DiguCnt, DiguNum, 1, Rude_Step_Control);
+	//GL_Build_NewTon_M3Point(ID_Pt, ID_Length, tN_GlobalS_4A, Energy_GlobalA, numc, Point_Check, DiguCnt, DiguNum, 1, Rude_Step_Control);
 	//GL_Build_Steepest_M4Point(ID_Pt,ID_Length, tN_GlobalS_4B,Energy_GlobalB,tStep_nn_G,numc,Point_Check,DiguCnt,DiguNum,0 );
 	////if(Energy_GlobalA[numc]>Energy_GlobalB[numc])
 	////{
@@ -2474,6 +2487,8 @@ void GL_Energy()
 			printf(" %d) 真实值：(%f,%f,%f) \n",i+1,x_ture1[i],y_ture1[i],z_ture1[i]);
 			printf("     估计值：(%f,%f,%f) \n",    x_etm1[i],y_etm1[i],z_etm1[i]);
 			printf("     误差值：(%f,%f,%f) \n",ABS(x_ture1[i]-x_etm1[i]),ABS(y_ture1[i]-y_etm1[i]),ABS(z_ture1[i]-z_etm1[i]) );
+			printf("     向量  ：(%f,%f,%f) \n", LineRays[ID_Pt1[i]].x,LineRays[ID_Pt1[i]].y,LineRays[ID_Pt1[i]].z);
+
 			if( ABS(x_ture1[i]-x_etm1[i])<1.0f && ABS(y_ture1[i]-y_etm1[i])<1.0f && ABS(z_ture1[i]-z_etm1[i])<1.0f )
 			{
 				printf("------------------------------->> Success !!!\n");
@@ -2505,6 +2520,8 @@ void GL_Energy()
 			printf(" %d) 真实值：(%f,%f,%f) \n",i+1,x_ture2[i],y_ture2[i],z_ture2[i]);
 			printf("     估计值：(%f,%f,%f) \n",    x_etm2[i],y_etm2[i],z_etm2[i]);
 			printf("     误差值：(%f,%f,%f) \n",ABS(x_ture2[i]-x_etm2[i]),ABS(y_ture2[i]-y_etm2[i]),ABS(z_ture2[i]-z_etm2[i]) );
+			printf("     向量  ：(%f,%f,%f) \n", LineRays[ID_Pt2[i]].x,LineRays[ID_Pt2[i]].y,LineRays[ID_Pt2[i]].z);
+			
 			if( ABS(x_ture2[i]-x_etm2[i])<1.0f && ABS(y_ture2[i]-y_etm2[i])<1.0f && ABS(z_ture2[i]-z_etm2[i])<1.0f )
 			{
 				printf("------------------------------->> Success !!!\n");
