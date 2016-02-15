@@ -1612,7 +1612,7 @@ void GL_Build_Steepest_M4Point(int *ID_Pt,float*ID_Length,float tN_GlobalS_4N[][
 		while (!Flag_DiGu)
 		 {
 			 /*if(DiguCnt>15)nn=0.000023;*/
-			 if(DiguCnt>1)break;
+			 if(DiguCnt>5)break;
 			 DiguNum=0;
 			 
 			 int i=0;
@@ -1732,21 +1732,25 @@ void GL_Build_Steepest_M4Point(int *ID_Pt,float*ID_Length,float tN_GlobalS_4N[][
 			 }*/
 
 			
-			if (t1 == t1b && t2 == t2b && t3 == t3b &&t4 == t4b)// && (ABS(t1-t1b)<0.005 && ABS(t2-t2b)<0.005 && ABS(t3-t3b)<0.005 && ABS(t4-t4b)<0.005)) 
+			 if (ABS(Ft1)<0.003 && ABS(Ft2)<0.003 && ABS(Ft3)<0.003 && ABS(Ft4)<0.003)// && (ABS(t1-t1b)<0.005 && ABS(t2-t2b)<0.005 && ABS(t3-t3b)<0.005 && ABS(t4-t4b)<0.005)) 
 			{
+				t1 = t1b;
+				t2 = t2b;
+				t3 = t3b;
+				t4 = t4b;
 				Flag_DiGu = 1;
 				break;
 			}
 			 
 
-			 if (DiguCnt >= 1)
+			/* if (DiguCnt >= 1)
 			 {
 				 if (i > 20000)
 				 {
 					 Flag_DiGu = 1;
 					 break;
 				 }
-			 }
+			 }*/
 #endif
 
 			 t1=t1b;
@@ -1755,7 +1759,7 @@ void GL_Build_Steepest_M4Point(int *ID_Pt,float*ID_Length,float tN_GlobalS_4N[][
 			 t4=t4b;
 		 }
 		 DiguCnt++;
-		  
+		 DiguNum = i;
 		 }
 
 		 //---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2062,8 +2066,8 @@ void GL_Build_NewTon_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][
 			}
 			else
 			{
-				printf("-------------------------------------------------- >>> 雅克比矩阵求逆失败 ！！！\n");
-				printf("雅克比运行次数 ：%d*65535 + %d \n", DiguCnt - 1, i);
+				//printf("-------------------------------------------------- >>> 雅克比矩阵求逆失败 ！！！\n");
+				//printf("雅克比运行次数 ：%d*65535 + %d \n", DiguCnt - 1, i);
 				Flag_DiGu = 1;
 				//雅克比矩阵为0，扰动
 				//扰动
@@ -2094,8 +2098,6 @@ void GL_Build_NewTon_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][
 					Flag_DiGu = 1;
 					break;
 				}
-			
-			
 		}
 		DiguNum = i;
 		
@@ -2104,53 +2106,75 @@ void GL_Build_NewTon_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][
 
 	//---------------------------------------------------------------------------------------------------------------------------------------------------
 	//在小区域内扰动
-#if 0
+#if 1
+	//牛顿迭代后进行最速下降递归
 	//扰动
-	t1 += float(rand() % 101 - 50) / 50.0f *1.3f;
-	t2 += float(rand() % 101 - 50) / 50.0f *1.3f;
-	t3 += float(rand() % 101 - 50) / 50.0f *1.3f;
+	t1 += float(rand() % 101 - 50) / 50.0f *0.3f;
+	t2 += float(rand() % 101 - 50) / 50.0f *0.3f;
+	t3 += float(rand() % 101 - 50) / 50.0f *0.3f;
 	
 	//printf("------------------------------->>>     +梯度下降法\n");
-	float nn = 0.002613;
-
-	int DiguCnt_R = 0;
-	int DiguNum_R = 0;
-	Flag_DiGu=0;
+	 Flag_DiGu = 0;//递归运算运行标识符
+	float nn = 0.002f;// 递归步长 适中（不能太大也不能太小）。
+	//float (*m)[3] = new float[3][3];
 	while (!Flag_DiGu)
 	{
-		/*if(DiguCnt>15)nn=0.000023;*/
-		if (DiguCnt_R>1)break;
-		DiguNum_R = 0;
-		DiguCnt_R++;
+		if (DiguCnt>=4)break;//递归次数大循环 限制
+		DiguNum = 0;
+		DiguCnt++;
 		int i = 0;
-		
+
 		for (i = 0; i<65535; i++)
 		{
+			// 3点递归
+			float D1 = (knn[0][0] * t1*t1 + knn[0][1] * t2*t2 + knn[0][2] * t1*t2 + knn[0][3] * t1 + knn[0][4] * t2 + knn[0][5] - E12);
+			float D2 = (knn[1][0] * t2*t2 + knn[1][1] * t3*t3 + knn[1][2] * t2*t3 + knn[1][3] * t2 + knn[1][4] * t3 + knn[1][5] - E22);
+			float D3 = (knn[2][0] * t1*t1 + knn[2][1] * t3*t3 + knn[2][2] * t1*t3 + knn[2][3] * t1 + knn[2][4] * t3 + knn[2][5] - E32);
 
-			if (Point_Check == 3)//四点递归
+			Ft1 = D1* (2.0f * knn[0][0] * t1 + knn[0][2] * t2 + knn[0][3])
+				+ D3* (2.0f * knn[2][0] * t1 + knn[2][2] * t3 + knn[2][3])
+				;
+
+			Ft2 = D1* (2.0f * knn[0][1] * t2 + knn[0][2] * t1 + knn[0][4])
+				+ D2* (2.0f * knn[1][0] * t2 + knn[1][2] * t3 + knn[1][3])
+				;
+
+			Ft3 = D2* (2.0f * knn[1][1] * t3 + knn[1][2] * t2 + knn[1][4])
+				+ D3* (2.0f * knn[2][1] * t3 + knn[2][2] * t1 + knn[2][4])
+				;
+			//------ 雅克比矩阵 最速下降法算法步长必须 雅克比矩阵为正定矩阵
+			/*			m[0][0] = D1* (2 * knn[0][0] * t1 + knn[0][2] * t2 + knn[0][3]);
+			m[0][1] = D1* (2 * knn[0][1] * t2 + knn[0][2] * t1 + knn[0][4]);
+			m[0][2] = 0;
+
+			m[1][0] = 0;
+			m[1][1] = D2* (2 * knn[1][0] * t2 + knn[1][2] * t3 + knn[1][3]);
+			m[1][2] = D2* (2 * knn[1][1] * t3 + knn[1][2] * t2 + knn[1][4]);
+
+			m[2][0] = D3* (2 * knn[2][0] * t1 + knn[2][2] * t3 + knn[2][3]);
+			m[2][1] = 0;
+			m[2][2] = D3* (2 * knn[2][1] * t3 + knn[2][2] * t1 + knn[2][4]);
+
+			float Fz = Ft1*Ft1 + Ft2*Ft2 + Ft3*Ft3;//步长分子
+			//步长分母
+			float Fm1 = Ft1*m[0][0] + Ft2*m[1][0] + Ft3*m[2][0];
+			float Fm2 = Ft1*m[0][1] + Ft2*m[1][1] + Ft3*m[2][1];
+			float Fm3 = Ft1*m[0][2] + Ft2*m[1][2] + Ft3*m[2][2];
+			//
+			nn = 0.002f;
+			float Fm = Ft1*Fm1 + Ft2*Fm2 + Ft3*Fm3;
+
+			if (Fm != 0)
 			{
-				float D1 = (knn[0][0] * t1*t1 + knn[0][1] * t2*t2 + knn[0][2] * t1*t2 + knn[0][3] * t1 + knn[0][4] * t2 + knn[0][5] - E12);
-				float D2 = (knn[1][0] * t2*t2 + knn[1][1] * t3*t3 + knn[1][2] * t2*t3 + knn[1][3] * t2 + knn[1][4] * t3 + knn[1][5] - E22);
-				float D3 = (knn[2][0] * t1*t1 + knn[2][1] * t3*t3 + knn[2][2] * t1*t3 + knn[2][3] * t1 + knn[2][4] * t3 + knn[2][5] - E32);
-
-				Ft1 = D1 * (2 * knn[0][0] * t1 + knn[0][2] * t2 + knn[0][3])
-					+ D3 * (2 * knn[2][0] * t1 + knn[2][2] * t3 + knn[2][3])
-					;
-
-				Ft2 = D1* (2 * knn[0][1] * t2 + knn[0][2] * t1 + knn[0][4])
-					+ D2* (2 * knn[1][0] * t2 + knn[1][2] * t3 + knn[1][3])
-					;
-
-				Ft3 = D2* (2 * knn[1][1] * t3 + knn[1][2] * t2 + knn[1][4])
-					+ D3* (2 * knn[2][1] * t3 + knn[2][2] * t1 + knn[2][4])
-					;
+			nn = Fz / Fm;
 			}
-
+			*/
 			float t1br = t1 - nn*Ft1;
 			float t2br = t2 - nn*Ft2;
 			float t3br = t3 - nn*Ft3;
 
-			if (t1br*c1 > 0 && t1br*c1 < 300 && t2br*c2 > 0 && t2br*c2 < 300 && t3br*c3 > 0 && t3br*c3 < 300)
+			//----------------------------
+			if ((t1br*c1) > 0 && (t1br*c1) < 350 && (t2br*c2) > 0 && (t2br*c2) < 350 && (t3br*c3) > 0 && (t3br*c3) < 350)
 			{
 				t1b = t1br;
 				t2b = t2br;
@@ -2158,22 +2182,28 @@ void GL_Build_NewTon_M3Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_3N[][
 			}
 			else
 			{
-				Flag_DiGu = 1;
-			}
-
-			if (t1 == t1b && t2 == t2b && t3 == t3b )// && (ABS(t1-t1b)<0.005 && ABS(t2-t2b)<0.005 && ABS(t3-t3b)<0.005 && ABS(t4-t4b)<0.005)) 
-			{
+				//printf("----------------------------------------------- >>>> 计算最优峰值 溢出报错！！！\n");
+				//printf("tnbr:(%f,%f,%f)\n", t1br, t2br, t3br);
 				Flag_DiGu = 1;
 				break;
 			}
-			
+
+			//------ 当梯度变化趋势很小时，认为找到极值点，跳出循环。
+			if (ABS(Ft1)<0.003 && ABS(Ft2)<0.003 && ABS(Ft3)<0.003)//if (t1 == t1b && t2 == t2b && t3 == t3b )
+			{
+				t1 = t1b;
+				t2 = t2b;
+				t3 = t3b;
+				Flag_DiGu = 1;
+				break;
+			}
 
 			t1 = t1b;
 			t2 = t2b;
 			t3 = t3b;
 		}
-		
-			DiguNum_R = i;
+
+		DiguNum = i;
 	}
 
 	//printf("/******************************************* 扰动后递归 ************************************************/\n");
