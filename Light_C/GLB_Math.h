@@ -287,7 +287,7 @@ void Element_4_int(float acx ,float acy ,float acz, float a)
 
 //	输出全局：四元数（角度 ，弧度）
 
-void GLB_IMU(int gxr, int gyr, int gzr, float halfT ) 
+void GLB_IMU(int gxr, int gyr, int gzr, float halfT,float &WwN ) 
 {
 	float gx=float(gxr)*CV_PI/180.0f;
 	float gy=float(gyr)*CV_PI/180.0f;
@@ -313,7 +313,7 @@ void GLB_IMU(int gxr, int gyr, int gzr, float halfT )
 		   q3 = q3 / norm;
 	   }
 
-	   Ww=acos(q0)*2*180/CV_PI;//---- 融合 磁偏角 q0 改为 qq0
+	   WwN=acos(q0)*2*180/CV_PI;//---- 融合 磁偏角 q0 改为 qq0
 
 	//更新方向余弦矩阵
 	float t11=q0*q0+q1*q1-q2*q2-q3*q3;
@@ -389,5 +389,19 @@ bool invert(float m[][3],float result[][3])
 	result[2][1] = -(m[0][0] * m[2][1] - m[2][0] * m[0][1]) * invdet;
 	result[2][2] = (m[0][0] * m[1][1] - m[1][0] * m[0][1]) * invdet;
 	return true;
+}
+
+/*********************************** 欧拉角转四元数 **************************************/
+void OLA_2_Q4(float &w,float &x,float &y,float &z,float PitchN,float RoolN,float YawN)
+{
+	float Y = YawN / 2;
+	float P = PitchN / 2;
+	float R = RoolN / 2;
+
+	w = cos(R)*cos(P)*cos(Y) + sin(R)*sin(P)*sin(Y);
+	x = cos(R)*sin(P)*cos(Y) + sin(R)*cos(P)*sin(Y);
+	y = cos(R)*cos(P)*sin(Y) - sin(R)*sin(P)*cos(Y);
+	z = sin(R)*cos(P)*cos(Y) - cos(R)*sin(P)*sin(Y);
+
 }
 #endif

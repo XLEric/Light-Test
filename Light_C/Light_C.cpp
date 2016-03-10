@@ -77,6 +77,9 @@ int main(int argc, char* argv[])
 	printf("\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ GL_Start!\n");
 	printf("\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ GL_Start!\n");
 
+	QuasiNewTon_DFP_Test();
+	QuasiNewTon_BFGS_Test();
+	Fun12_Test();
 	for(int i=0;i<6;i++)
 	{
 		for(int j=0;j<4;j++)

@@ -83,6 +83,7 @@
   <ItemGroup>
     <ClInclude Include="GLB_Math.h" />
     <ClInclude Include="GL_Process.h" />
+    <ClInclude Include="Optimization_Math.h" />
     <ClInclude Include="Param_GL.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
