@@ -71,6 +71,46 @@ float Fun12(int n, float a[][12])
 	return sum; /*将值返回*/
 }
 
+/************求5*5行列式***********/
+//用1）迭代思想，迭代到1*1行列式，2）以及代数余子式计算行列式的思想
+// n:为矩阵阶数
+float Fun5(int n, float a[][5])
+{
+	float b[5][5] = { { 0 } }; /*定义数组b并初始化*/
+	int i = 0, j = 0;//i，j为行与列
+	float sum = 0; /*，sum为行列式的值*/
+	int x = 0, c = 0, p = 0; /*用x判断加与减，c,p为中间变量*/
+
+	if (n == 1)
+		return a[0][0];
+
+	for (i = 0; i < n; i++) /*此处大循环实现将余子式存入数组b中*/
+	{
+		for (c = 0; c < n - 1; c++)
+		{
+			for (j = 0; j < n - 1; j++)
+			{
+				if (c < i){ /*借助c判断每行的移动方法*/
+					p = 0; /*当p=0时，行列式只向左移，即消去对应的第一列的数*/
+				}
+				else{ /*否则行列式左移后再上移*/
+					p = 1;
+				}
+				b[c][j] = a[c + p][j + 1];
+			}
+		}
+
+		if (i % 2 == 0){ /*i+j（此时j=0，故只考虑i）为偶数，加法预算*/
+			x = 1;
+		}
+		else{ /*i+j为奇数，减法运算*/
+			x = (-1);
+		}
+		sum += a[i][0] * Fun5(n - 1, b) * x; /*计算行列式的值*/
+	}
+
+	return sum; /*将值返回*/
+}
 /************求4*4行列式***********/
 //用1）迭代思想，迭代到1*1行列式，2）以及代数余子式计算行列式的思想
 // n:为矩阵阶数
@@ -156,11 +196,11 @@ float Fun3(int n, float a[][3])
 void Fun12_Test()
 {
 	printf("\t12*12 行列式求解测试\n\n");
-	float a[4][4];
+	float a[5][5];
 	//
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 5; i++)
 	{
-		for (int j = 0; j < 4; j++)
+		for (int j = 0; j < 5; j++)
 		{
 			if (i == j)
 				a[i][j] = 10;
@@ -169,12 +209,12 @@ void Fun12_Test()
 		}
 	}
 	//
-	float A = Fun4(4, a);
-	for (int i = 0; i < 4; i++)
+	float A = Fun5(5, a);
+	for (int i = 0; i < 5; i++)
 	{
-		for (int j = 0; j < 4; j++)
+		for (int j = 0; j < 5; j++)
 		{
-			printf("\t%f ,", a[i][j]);
+			printf(" %f ,", a[i][j]);
 		}
 		printf("\n");
 	}
@@ -186,6 +226,7 @@ void Fun12_Test()
 //r 逆矩阵
 //m 原矩阵
 //A 原矩阵行列式
+
 void Ivin(float r[][4],float m[][4],float A)
 {
 	//
@@ -297,6 +338,81 @@ void Ivin(float r[][4],float m[][4],float A)
 		}
 	}
 
+}
+/******************************************* 求伴随矩阵元素 ******************************************/
+//求4*4矩阵的伴随矩阵元素
+void Companion_Matrix(float m[][4],float mr[3][3],int k0,int m0)
+{
+	int mm = 0;
+	int kk = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			if (i != k0 && j != m0)
+			{
+				mr[kk][mm] = m[i][j];
+				if (mm < 2)
+				{
+					mm++;
+				}
+				else
+				{
+					mm = 0;
+					kk++;
+				}
+			}
+		}
+	}
+}
+/******************************* 求逆矩阵（模块化） *****************************/
+//r 逆矩阵
+//m 原矩阵
+//A 原矩阵行列式
+void Ivin4_Auto(float r[][4], float m[][4], float A)
+{
+	//
+	printf("函数化: 求逆矩阵\n");
+	float mr[3][3];
+	// r[0][0]
+	
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			Companion_Matrix(m, mr, i, j);//求伴随矩阵元素
+			//求逆
+			r[j][i] = Fun3(3, mr)/A;//注意伴随矩阵的转置关系
+			if ((i + j) % 2 != 0)//判断代数余子式的符号
+			{
+				r[j][i] = -r[j][i];
+			}
+		}
+	}
+	
+	//r[0][0] = Fun3(3, mr);
+	//r[1][0] = -Fun3(3, mr);
+	//r[2][0] = Fun3(3, mr);
+	//r[3][0] = -Fun3(3, mr);
+	//r[0][1] = -Fun3(3, mr);
+	//r[1][1] = Fun3(3, mr);
+	//r[2][1] = -Fun3(3, mr);
+	//r[3][1] = Fun3(3, mr);
+	//r[0][2] = Fun3(3, mr);
+	//r[1][2] = -Fun3(3, mr);
+	//r[2][2] = Fun3(3, mr);
+	//r[3][2] = -Fun3(3, mr);
+	//r[0][3] = -Fun3(3, mr);
+	//r[1][3] = Fun3(3, mr);
+	//r[2][3] = -Fun3(3, mr);
+	//r[3][3] = Fun3(3, mr);
+	//for (int ii = 0; ii < 4; ii++)
+	//{
+	//	for (int jj = 0; jj < 4; jj++)
+	//	{
+	//		r[ii][jj] /= A;
+	//	}
+	//}
 }
 /*****************************4点 牛顿，再梯度，再拟牛顿******************************/
 void GL_Build_NewTon_M4Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_4N[][4], float* Energy_GlobalN, float *tStep_nn_GX, int numc,
@@ -503,7 +619,8 @@ void GL_Build_NewTon_M4Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_4N[][
 
 				if (A != 0)
 				{
-					Ivin(r, m, A);// 求矩阵m的逆矩阵r。A为矩阵m行列式的值
+					//Ivin(r, m, A);// 求矩阵m的逆矩阵r。A为矩阵m行列式的值
+					Ivin4_Auto(r, m, A);// 函数化求伴随矩阵，求矩阵m的逆矩阵r。A为矩阵m行列式的值
 					Cnt_Newton++;
 				}
 				else
@@ -1417,7 +1534,6 @@ void GL_Build_NewTon_M4Point(int *ID_Pt, float*ID_Length, float tN_GlobalS_4N[][
 	printf(">递归结果(t1,t2,t3,t4):(%f ,%f ,%f ,%f)\n",t1,t2,t3,t4);
 	printf("\n");
 }
-
 
 //------------------------------------------------------------------------------
 //C1函数：

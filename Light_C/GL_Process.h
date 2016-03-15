@@ -876,7 +876,7 @@ void GL_GotHead_DisPlay_Pt()
 	HeadPlay_Pt[8]=GL_Quater_Point(Qt0, HeadPlay_PtB[8], -4,-4,0, 0.9,0.8,0);
 
 	//(0,0,z)点
-	HeadPlay_Pt[9]=GL_Quater_Point(Qt0, HeadPlay_PtB[9], 0,0,-1, 0,0,0);
+	HeadPlay_Pt[9]=GL_Quater_Point(Qt0, HeadPlay_PtB[9], 0,1,-1, 0,0,0);
 
 	int num=10;
 	/*for(int i=0;i<num;i++)
@@ -4044,7 +4044,6 @@ void GL_Energy()
 				fprintf(file_Err, "    真实值：(%f,%f,%f) 2组\n", x_ture2[i], y_ture2[i], z_ture2[i]);
 				fprintf(file_Err, "    估计值：(%f,%f,%f) 2组\n", x_etm2[i], y_etm2[i], z_etm2[i]);
 				fprintf(file_Err, "    误差值：(%f,%f,%f) 2组\n", ABS(x_ture2[i] - x_etm2[i]), ABS(y_ture2[i] - y_etm2[i]), ABS(z_ture2[i] - z_etm2[i]));
-				
 			}
 		}
 
@@ -4059,6 +4058,7 @@ void GL_Energy()
 		{
 			printf("@:::::::::::::::::: Point%d (2.5cm以内)最优错误计数 ： %d\n",i+1,Erron_CntBest[i]);
 			printf("@!!!!!!!!!!!!!!!!!! Point%d (2.5cm以内)最优正确计数 ： %d\n",i+1,Right_CntBest[i]);
+			printf("@!!!!!!!!!!!!!!!! Point%d (2.5cm以内)错误计算百分率 ： %f\n", 1 + 1, float(Erron_CntBest[i]) / float(Erron_CntBest[i] + Right_CntBest[i]));
 			printf("\n");
 		}
 

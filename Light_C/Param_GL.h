@@ -12,7 +12,7 @@
 
 #define ABS(x)((x)>0?(x):-(x))
 #define STEPNN 0.000051f
-#define Scan_Step 0.0191f //横纵 Motor的运动步长
+#define Scan_Step 0.0101f //横纵 Motor的运动步长
 
 //Motor 横向 运动
 float Edge_HW_x = -90.0f;
